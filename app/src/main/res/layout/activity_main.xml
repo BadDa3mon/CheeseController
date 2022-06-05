@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".MainActivity"
+        android:background="@color/black">
+
+    <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/connecting_status_text_view"
+            android:layout_centerHorizontal="true"
+            android:textColor="@color/yellow"
+            android:textSize="24sp"
+            android:text="@string/connecting"/>
+
+    <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/date_time_layout"
+            android:layout_below="@id/connecting_status_text_view"
+            android:layout_marginTop="10dp">
+
+        <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/date_text_view"
+                android:layout_centerHorizontal="true"
+                android:textColor="@color/yellow"
+                android:textSize="28sp"
+                android:layout_weight="0.5"
+                tools:text="2022-03-01"
+                android:gravity="center"/>
+
+        <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/time_text_view"
+                android:layout_centerHorizontal="true"
+                android:textColor="@color/yellow"
+                android:textSize="28sp"
+                android:layout_weight="0.5"
+                tools:text="11:56:58"
+                android:gravity="center"/>
+    </LinearLayout>
+
+    <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/date_time_layout"
+            android:id="@+id/work_data_layout"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp"
+            android:layout_marginTop="10dp">
+
+        <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/cheese_global_layout">
+
+            <TextView
+                    android:text="@string/cheese_count_global"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/cheese_global_text_view"
+                    android:layout_weight="0.5"
+                    android:textColor="@color/yellow"
+                    android:textSize="24sp"/>
+
+            <TextView
+                    android:text="0"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/cheese_global_count_text_view"
+                    android:layout_weight="0.5"
+                    android:textColor="@color/red"
+                    android:textSize="24sp"
+                    />
+        </LinearLayout>
+
+        <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/cheese_online_layout">
+
+            <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/cheese_online_text_view"
+                    android:layout_weight="0.5"
+                    android:textColor="@color/yellow"
+                    android:textSize="24sp"
+                    android:text="@string/cheese_count_online"/>
+
+            <TextView
+                    android:text="0"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/cheese_online_count_text_view"
+                    android:layout_weight="0.5"
+                    android:textColor="@color/red"
+                    android:textSize="24sp"
+                    />
+
+        </LinearLayout>
+
+        <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/cheese_in_cooking_layout">
+
+            <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/cheese_in_cooking_text_view"
+                    android:layout_weight="0.5"
+                    android:textColor="@color/yellow"
+                    android:textSize="24sp"
+                    android:text="@string/cheese_count_in_cooking"/>
+
+            <TextView
+                    android:text="0"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/cheese_in_cooking_count_text_view"
+                    android:layout_weight="0.5"
+                    android:textColor="@color/red"
+                    android:textSize="24sp"
+                    />
+        </LinearLayout>
+
+        <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/current_cooking_layout">
+
+            <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/current_cooking_text_view"
+                    android:layout_weight="0.5"
+                    android:textColor="@color/yellow"
+                    android:textSize="24sp"
+                    android:text="@string/current_cooking"/>
+
+            <LinearLayout
+                    android:orientation="horizontal"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="0.5"
+                    android:id="@+id/current_cooking_change_layout">
+
+                <androidx.appcompat.widget.AppCompatButton
+                        android:id="@+id/current_cooking_prev_value_button"
+                        android:layout_width="32dp"
+                        android:layout_height="wrap_content"
+                        android:backgroundTint="@color/black"
+                        android:padding="0dp"
+                        android:text="@string/left"
+                        android:textColor="@color/red"
+                        android:gravity="center"
+                        android:textSize="20sp"/>
+
+                <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/current_cooking_count_text_view"
+                        android:textColor="@color/red"
+                        android:textSize="24sp"
+                        android:text="0"/>
+
+                <androidx.appcompat.widget.AppCompatButton
+                        android:id="@+id/current_cooking_new_value_button"
+                        android:layout_width="32dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="5dp"
+                        android:backgroundTint="@color/black"
+                        android:padding="0dp"
+                        android:text="@string/right"
+                        android:textColor="@color/red"
+                        android:textSize="20sp"/>
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:id="@+id/date_cooking_layout">
+
+            <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/date_cooking_text_view"
+                    android:layout_weight="0.5"
+                    android:textColor="@color/yellow"
+                    android:textSize="24sp"
+                    android:text="@string/date_cooking"/>
+
+            <EditText
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:inputType="datetime"
+                    android:id="@+id/date_cooking_edit_text"
+                    android:layout_weight="0.5"
+                    android:textColor="@color/red"
+                    tools:text="2022-03-01"
+                    android:textSize="20sp"/>
+
+        </LinearLayout>
+    </LinearLayout>
+
+    <Button
+            android:text="@string/new_cooking"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/new_cooking_button"
+            android:textColor="@color/white"
+            android:backgroundTint="@color/button_bg"
+            android:textSize="24sp"
+            android:layout_below="@id/work_data_layout"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="10dp"
+            android:paddingStart="40dp"
+            android:paddingEnd="40dp"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"/>
+
+</RelativeLayout>

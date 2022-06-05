@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">Cheese Controller</string>
+
+    <string name="connecting">Connecting…</string>
+    <string name="connected">Connected</string>
+    <string name="not_connected">Not connected</string>
+
+    <string name="cheese_count_global">Количество сыра:</string>
+    <string name="cheese_count_online">Количество онлайн:</string>
+    <string name="cheese_count_in_cooking">Количество в варке:</string>
+
+    <string name="current_cooking">Текущая варка:</string>
+    
+    <string name="date_cooking">Дата варки:</string>
+
+    <string name="new_cooking">Новая варка</string>
+    <string name="change_panel">Сменить панель</string>
+
+    <string name="left">&lt;</string>
+    <string name="right">&gt;</string>
+</resources>
