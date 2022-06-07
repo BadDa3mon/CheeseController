@@ -1,6 +1,11 @@
 <resources>
     <string name="app_name">Cheese Controller</string>
 
+    <string name="select_mode">Выберите режим использования</string>
+
+    <string name="first_panel">Первая панель</string>
+    <string name="second_panel">Вторая панель</string>
+
     <string name="connecting">Connecting…</string>
     <string name="connected">Connected</string>
     <string name="not_connected">Not connected</string>
@@ -10,7 +15,7 @@
     <string name="cheese_count_in_cooking">Количество в варке:</string>
 
     <string name="current_cooking">Текущая варка:</string>
-    
+
     <string name="date_cooking">Дата варки:</string>
 
     <string name="new_cooking">Новая варка</string>
@@ -18,4 +23,8 @@
 
     <string name="left">&lt;</string>
     <string name="right">&gt;</string>
+
+    <string name="hint_tg">Если вам не тяжело, отпишите, пожалуйста мне в телеграм: <a href="http://t.me/badda3mon">t.me/badda3mon</a>\n
+        На кворке ужасный чат, было бы удобнее в телеграме</string>
+
 </resources>
