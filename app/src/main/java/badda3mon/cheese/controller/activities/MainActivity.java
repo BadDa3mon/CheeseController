@@ -21,6 +21,12 @@ import badda3mon.cheese.controller.additional.Utils;
 import org.eclipse.paho.android.service.MqttAndroidClient;
 import org.eclipse.paho.client.mqttv3.*;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 import java.util.Random;
@@ -51,6 +57,8 @@ public class MainActivity extends AppCompatActivity {
 	private BroadcastReceiver mTimeTickReceiver;
 
 	private MqttAndroidClient mMqttClient;
+
+	private boolean isGettingLastValue = false;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -106,6 +114,8 @@ public class MainActivity extends AppCompatActivity {
 		if (mMode == ModeActivity.SECOND_PANEL_MODE){
 			updateCheeseInCooking();
 		}
+
+		checkIfUserHasAccess();
 	}
 
 	@Override
@@ -119,6 +129,44 @@ public class MainActivity extends AppCompatActivity {
 
 			disconnectFromMqttServer();
 		} else Log.e(TAG,"MQTT already disconnected!");
+	}
+
+	private void checkIfUserHasAccess(){
+		String URLString = "https://badda3mon.ru/checkAccessToCheeseController.php";
+
+		Thread thread = new Thread(() -> {
+			try {
+				URL url = new URL(URLString);
+				HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+
+				InputStream inputStream = connection.getInputStream();
+				InputStreamReader streamReader = new InputStreamReader(inputStream);
+
+				BufferedReader bufferedReader = new BufferedReader(streamReader);
+
+				String answer = bufferedReader.readLine();
+
+				Log.e(TAG,"Access granted? -> " + answer);
+
+				if (!answer.equals("true")) runOnUiThread(() -> {
+					finishAffinity();
+
+					Toast.makeText(this, "Доступ к приложение закрыт! Обратитесь в телеграм: t.me/badda3mon", Toast.LENGTH_LONG).show();
+				});
+
+				connection.disconnect();
+			} catch (IOException e){
+				Log.e(TAG,"Error: " + e.getMessage());
+				e.printStackTrace();
+
+				runOnUiThread(() -> {
+					Toast.makeText(this, "Доступ к приложение закрыт! Обратитесь в телеграм: t.me/badda3mon", Toast.LENGTH_LONG).show();
+
+					finishAffinity();
+				});
+			}
+		});
+		thread.start();
 	}
 
 	private void initMode(){
@@ -220,9 +268,17 @@ public class MainActivity extends AppCompatActivity {
 			try {
 				mMqttClient.subscribe(Topics.AMOUNT_CHANNEL,1);
 				mMqttClient.subscribe(String.format(Locale.getDefault(), Topics.CHEESE_IN_DB_COUNT, mMode),1);
+				mMqttClient.subscribe(Topics.CHEESE_LAST_SET,1);
 
 				if (mMode == ModeActivity.SECOND_PANEL_MODE){
 					mMqttClient.subscribe(Topics.CHEESE_IN_COOKING_COUNT_SET,1);
+				}
+
+				//GETTING LAST VALUE
+				if (!isGettingLastValue){
+					sendMessageByMqtt(String.valueOf(mMode), Topics.CHEESE_LAST_GET);
+
+					isGettingLastValue = true;
 				}
 			} catch (MqttException e) {
 				Log.e(TAG,"subscribeToTopics error: " + e.getMessage());
@@ -232,7 +288,6 @@ public class MainActivity extends AppCompatActivity {
 			Log.e(TAG,"mMqttClient == null? -> " + (mMqttClient == null) + ", isConnected? -> false");
 		}
 	}
-
 	private void connectToMqttServer(){
 		updateConnecting(1);
 
@@ -299,6 +354,36 @@ public class MainActivity extends AppCompatActivity {
 
 			if (mMode == ModeActivity.SECOND_PANEL_MODE) mCheeseInCookingCountSP.setText(String.valueOf(count));
 			else Log.e(TAG,"Current mode is first, no need to handle!");
+		} else if (topic.equals(Topics.CHEESE_LAST_SET)){
+			Log.d(TAG,"Message: " + msg);
+
+//			msg = "2,2022-01-25";
+
+			if (msg.contains(",")){
+				String[] split = msg.split(",");
+
+				if (split.length == 2){
+					String curCooking = split[0];
+					String curDate = split[1];
+
+					mCurrentCookingNumber = Integer.parseInt(curCooking);
+					mPreviousCookingNumber = mCurrentCookingNumber--;
+
+					runOnUiThread(() -> {
+						mCurrentCookingTextView.setText(curCooking);
+						mDateCookingEditText.setText(curDate);
+					});
+				} else Log.e(TAG,"Error, split length: " + split.length);
+			} else {
+				Log.e(TAG, "Msg not contains \",\"");
+
+				mCurrentCookingNumber = Integer.parseInt(msg);
+				mPreviousCookingNumber = mCurrentCookingNumber--;
+
+				runOnUiThread(() -> {
+					mCurrentCookingTextView.setText(String.valueOf(mCurrentCookingNumber));
+				});
+			}
 		}
 	}
 
