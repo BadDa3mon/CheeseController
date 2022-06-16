@@ -13,12 +13,12 @@ public class Utils {
 		return dateFormat.format(date);
 	}
 
-	public static String getNextDate(String format){
+	public static String getPrevDate(String format){
 		Calendar calendar = Calendar.getInstance();
 
 		int dayOfYear = calendar.get(Calendar.DAY_OF_YEAR);
 
-		calendar.set(Calendar.DAY_OF_YEAR, (dayOfYear + 1));
+		calendar.set(Calendar.DAY_OF_YEAR, (dayOfYear - 1));
 		Date date = calendar.getTime();
 
 		SimpleDateFormat dateFormat = new SimpleDateFormat(format, Locale.getDefault());

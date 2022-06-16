@@ -4,8 +4,13 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Color;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
+import android.text.Editable;
+import android.text.Html;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
@@ -29,12 +34,11 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Locale;
-import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
 	private static final String TAG = "MainActivity";
 
-	private static final String SERVER_IP = "tcp://46.160.179.227:8883";
+	private static final String SERVER_IP = "tcp://192.168.2.9:8883";
 
 	private int mMode;
 
@@ -58,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
 
 	private MqttAndroidClient mMqttClient;
 
-	private boolean isGettingLastValue = false;
+	private String mStartedDate;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -110,12 +114,6 @@ public class MainActivity extends AppCompatActivity {
 
 			connectToMqttServer();
 		} else Log.e(TAG,"MQTT already connected!");
-
-		if (mMode == ModeActivity.SECOND_PANEL_MODE){
-			updateCheeseInCooking();
-		}
-
-		checkIfUserHasAccess();
 	}
 
 	@Override
@@ -129,44 +127,6 @@ public class MainActivity extends AppCompatActivity {
 
 			disconnectFromMqttServer();
 		} else Log.e(TAG,"MQTT already disconnected!");
-	}
-
-	private void checkIfUserHasAccess(){
-		String URLString = "https://badda3mon.ru/checkAccessToCheeseController.php";
-
-		Thread thread = new Thread(() -> {
-			try {
-				URL url = new URL(URLString);
-				HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-
-				InputStream inputStream = connection.getInputStream();
-				InputStreamReader streamReader = new InputStreamReader(inputStream);
-
-				BufferedReader bufferedReader = new BufferedReader(streamReader);
-
-				String answer = bufferedReader.readLine();
-
-				Log.e(TAG,"Access granted? -> " + answer);
-
-				if (!answer.equals("true")) runOnUiThread(() -> {
-					finishAffinity();
-
-					Toast.makeText(this, "Доступ к приложение закрыт! Обратитесь в телеграм: t.me/badda3mon", Toast.LENGTH_LONG).show();
-				});
-
-				connection.disconnect();
-			} catch (IOException e){
-				Log.e(TAG,"Error: " + e.getMessage());
-				e.printStackTrace();
-
-				runOnUiThread(() -> {
-					Toast.makeText(this, "Доступ к приложение закрыт! Обратитесь в телеграм: t.me/badda3mon", Toast.LENGTH_LONG).show();
-
-					finishAffinity();
-				});
-			}
-		});
-		thread.start();
 	}
 
 	private void initMode(){
@@ -191,33 +151,69 @@ public class MainActivity extends AppCompatActivity {
 
 	private boolean isCookingStarted = false;
 	public void onNewCookingButtonClick(View view){
-		if (mCurrentCookingNumber == (mPreviousCookingNumber + 1) || !isCookingStarted){
-			String currentDate = Utils.getCurrentDate("YYYY-MM-dd");
-			String nextDate = Utils.getNextDate("YYYY-MM-dd");
+		String currentDate = Utils.getCurrentDate("YYYY-MM-dd");
+		String prevDate = Utils.getPrevDate("YYYY-MM-dd");
 
-			String date = mDateCookingEditText.getText().toString();
+		String date = mDateCookingEditText.getText().toString();
 
-			if (date.equals(currentDate) || date.equals(nextDate)){
-				String msg = mMode + "," + date + "," + mCurrentCookingNumber;
-
-				sendMessageByMqtt(msg, Topics.BASE_CHANNEL);
-
-				mPreviousCookingNumber = mCurrentCookingNumber;
-
-				if (!isCookingStarted) isCookingStarted = true;
+		if (!date.equals(currentDate) && !date.equals(prevDate)){
+			String msg = "Дата варки может быть только вчерашняя или сегодняшняя, проверьте введённые данные и повторите попытку!";
+			Toast toast = Toast.makeText(this, msg, Toast.LENGTH_LONG);
+			if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+				View toastView = toast.getView();
+				TextView tv = toastView.findViewById(android.R.id.message);
+				tv.setTextColor(Color.RED);
 			} else {
-				Log.e(TAG,"Date incorrect!\n" +
-						"Current: " + currentDate + "\n" +
-						"Next: " + nextDate + "\n" +
-						"Inputted: " + date);
-
-				Toast.makeText(this, "Дата варки может быть только сегодняшняя или завтрашняя, проверьте введённые данные и повторите попытку!", Toast.LENGTH_LONG).show();
+				toast = Toast.makeText(this, Html.fromHtml("<font color='#ff0000'><b>" + msg + "</b></font>"), Toast.LENGTH_LONG);
 			}
+
+			toast.show();
+		} else if (mStartedDate == null){
+			String msg = "Неактуальные данные. Последняя дата и варка не были получены, проверьте соединение с сервером!";
+			Toast toast = Toast.makeText(this, msg, Toast.LENGTH_LONG);
+			if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+				View toastView = toast.getView();
+				TextView tv = toastView.findViewById(android.R.id.message);
+				tv.setTextColor(Color.RED);
+			} else {
+				toast = Toast.makeText(this, Html.fromHtml("<font color='#ff0000'><b>" + msg + "</b></font>"), Toast.LENGTH_LONG);
+			}
+
+			toast.show();
+		} else if (!mStartedDate.equals(date) && mCurrentCookingNumber != 1){
+			String msg = "Вы вручную изменили дату, необходимо начать варку с 1, у вас выставлено: " + mCurrentCookingNumber;
+			Toast toast = Toast.makeText(this, msg, Toast.LENGTH_LONG);
+			if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+				View toastView = toast.getView();
+				TextView tv = toastView.findViewById(android.R.id.message);
+				tv.setTextColor(Color.RED);
+			} else {
+				toast = Toast.makeText(this, Html.fromHtml("<font color='#ff0000'><b>" + msg + "</b></font>"), Toast.LENGTH_LONG);
+			}
+
+			toast.show();
+		} else if (mCurrentCookingNumber == (mPreviousCookingNumber + 1) || !isCookingStarted){
+			String msg = mMode + "," + date + "," + mCurrentCookingNumber;
+
+			sendMessageByMqtt(msg, Topics.BASE_CHANNEL);
+
+			mPreviousCookingNumber = mCurrentCookingNumber;
+
+			if (!isCookingStarted) isCookingStarted = true;
 		} else {
 			Log.e(TAG,"Current number has bad number");
 
 			String msg = "Предыдущий номер варки был \"" + mPreviousCookingNumber + "\", текущий должен быть \"" + (mPreviousCookingNumber + 1) + "\"";
-			Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+			Toast toast = Toast.makeText(this, msg, Toast.LENGTH_LONG);
+			if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+				View toastView = toast.getView();
+				TextView tv = toastView.findViewById(android.R.id.message);
+				tv.setTextColor(Color.RED);
+			} else {
+				toast = Toast.makeText(this, Html.fromHtml("<font color='#ff0000'><b>" + msg + "</b></font>"), Toast.LENGTH_LONG);
+			}
+
+			toast.show();
 		}
 	}
 
@@ -231,7 +227,16 @@ public class MainActivity extends AppCompatActivity {
 			if (mCurrentCookingNumber > 0){
 				mCurrentCookingNumber--;
 			} else {
-				Toast.makeText(this, "Значение не может быть меньше нуля!", Toast.LENGTH_SHORT).show();
+				Toast toast = Toast.makeText(this, "Значение не может быть меньше нуля!", Toast.LENGTH_LONG);
+				if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+					View toastView = toast.getView();
+					TextView tv = toastView.findViewById(android.R.id.message);
+					tv.setTextColor(Color.RED);
+				} else {
+					toast = Toast.makeText(this, Html.fromHtml("<font color='#ff0000'><b>Значение не может быть меньше нуля!</b></font>"), Toast.LENGTH_LONG);
+				}
+
+				toast.show();
 
 				mCurrentCookingNumber = 0;
 			}
@@ -239,6 +244,8 @@ public class MainActivity extends AppCompatActivity {
 		text = String.valueOf(mCurrentCookingNumber);
 
 		mCurrentCookingTextView.setText(text);
+
+		mDateCookingEditText.setEnabled(mCurrentCookingNumber >= 15);
 	}
 
 	private void sendMessageByMqtt(String msg, String topic){
@@ -258,8 +265,6 @@ public class MainActivity extends AppCompatActivity {
 			}
 		} else {
 			Log.e(TAG,"mMqttClient == null? -> " + (mMqttClient == null) + ", isConnected? -> false");
-
-			Toast.makeText(this, "Вы не подключены к серверу!", Toast.LENGTH_SHORT).show();
 		}
 	}
 
@@ -275,11 +280,7 @@ public class MainActivity extends AppCompatActivity {
 				}
 
 				//GETTING LAST VALUE
-				if (!isGettingLastValue){
-					sendMessageByMqtt(String.valueOf(mMode), Topics.CHEESE_LAST_GET);
-
-					isGettingLastValue = true;
-				}
+				sendMessageByMqtt(String.valueOf(mMode), Topics.CHEESE_LAST_GET);
 			} catch (MqttException e) {
 				Log.e(TAG,"subscribeToTopics error: " + e.getMessage());
 				e.printStackTrace();
@@ -304,6 +305,12 @@ public class MainActivity extends AppCompatActivity {
 				public void connectComplete(boolean reconnect, String serverURI) {
 					runOnUiThread(() -> updateConnecting(2));
 					subscribeToTopics();
+
+					if (mMode == ModeActivity.SECOND_PANEL_MODE){
+						updateCheeseInCooking();
+					}
+
+					updateLastValue();
 				}
 
 				@Override
@@ -367,33 +374,39 @@ public class MainActivity extends AppCompatActivity {
 					String curDate = split[1];
 
 					mCurrentCookingNumber = Integer.parseInt(curCooking);
-					mPreviousCookingNumber = mCurrentCookingNumber--;
+					mPreviousCookingNumber = mCurrentCookingNumber;
+
+					mStartedDate = curDate;
 
 					runOnUiThread(() -> {
 						mCurrentCookingTextView.setText(curCooking);
 						mDateCookingEditText.setText(curDate);
 					});
+
+					try {
+						mMqttClient.unsubscribe(Topics.CHEESE_LAST_SET);
+					} catch (MqttException e) {
+						Log.e(TAG,"Error: " + e.getMessage());
+						e.printStackTrace();
+					}
 				} else Log.e(TAG,"Error, split length: " + split.length);
-			} else {
-				Log.e(TAG, "Msg not contains \",\"");
-
-				mCurrentCookingNumber = Integer.parseInt(msg);
-				mPreviousCookingNumber = mCurrentCookingNumber--;
-
-				runOnUiThread(() -> {
-					mCurrentCookingTextView.setText(String.valueOf(mCurrentCookingNumber));
-				});
 			}
+
+			isCookingStarted = true;
+
+			mDateCookingEditText.setEnabled(mCurrentCookingNumber >= 15);
 		}
 	}
 
 	private void updateCheeseInCooking(){
 		if (mMqttClient != null && mMqttClient.isConnected()){
 			mHandler.postDelayed(() -> {
-				sendMessageByMqtt(String.valueOf(mCurrentCookingNumber), Topics.CHEESE_IN_COOKING_COUNT_GET);
+				String msg = mDateCookingEditText.getText().toString() + "," + mCurrentCookingNumber;
+
+				sendMessageByMqtt(msg, Topics.CHEESE_IN_COOKING_COUNT_GET);
 
 				updateCheeseInCooking();
-			},5000);
+			},10000);
 		} else {
 			Log.e(TAG,"mMqttClient == null? -> " + (mMqttClient == null) + ", isConnected? -> false");
 		}
@@ -426,5 +439,42 @@ public class MainActivity extends AppCompatActivity {
 
 		mNowDateTextView.setText(date);
 		mNowTimeTextView.setText(time);
+	}
+
+	private int delay = 2000;
+	private void updateLastValue(){
+		if (mMqttClient != null && mMqttClient.isConnected()){
+			if (mStartedDate == null){
+				mHandler.postDelayed(() -> {
+					if (mStartedDate != null){
+						sendMessageByMqtt(String.valueOf(mMode), Topics.CHEESE_LAST_GET);
+
+						updateLastValue();
+					}
+				},10000);
+
+				mHandler.postDelayed(() -> {
+					if (mStartedDate == null){
+						runOnUiThread(() -> {
+							String msg = "Неактуальные данные. Последняя дата и варка не были получены, проверьте соединение с сервером!";
+							Toast toast = Toast.makeText(this, msg, Toast.LENGTH_LONG);
+							if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+								View toastView = toast.getView();
+								TextView tv = toastView.findViewById(android.R.id.message);
+								tv.setTextColor(Color.RED);
+							} else {
+								toast = Toast.makeText(this, Html.fromHtml("<font color='#ff0000'><b>" + msg + "</b></font>"), Toast.LENGTH_LONG);
+							}
+
+							toast.show();
+						});
+					}
+
+					delay = 10000;
+				}, delay);
+			}
+		} else {
+			Log.e(TAG,"mMqttClient == null? -> " + (mMqttClient == null) + ", isConnected? -> false");
+		}
 	}
 }

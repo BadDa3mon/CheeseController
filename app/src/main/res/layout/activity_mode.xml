@@ -64,18 +64,4 @@
                 android:onClick="onSelectPanelButtonsClick"/>
     </LinearLayout>
 
-    <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/select_status_text_view2"
-            android:layout_centerHorizontal="true"
-            android:textColor="@color/yellow"
-            android:textSize="24sp"
-            android:text="@string/hint_tg"
-            android:layout_marginStart="10dp"
-            android:layout_marginEnd="10dp"
-            android:layout_marginTop="10dp"
-            android:layout_below="@id/mode_buttons_layout"
-            android:gravity="center"
-            android:autoLink="web"/>
 </RelativeLayout>

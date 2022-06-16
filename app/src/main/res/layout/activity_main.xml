@@ -216,7 +216,8 @@
                     android:layout_weight="0.5"
                     android:textColor="@color/red"
                     tools:text="2022-03-01"
-                    android:textSize="20sp"/>
+                    android:textSize="20sp"
+                    android:enabled="false"/>
 
         </LinearLayout>
     </LinearLayout>
